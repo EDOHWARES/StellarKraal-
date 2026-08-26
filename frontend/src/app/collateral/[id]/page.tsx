@@ -1,13 +1,12 @@
-'use client';
-import { useEffect, useState } from 'react';
-import Link from 'next/link';
-import Image from 'next/image';
-import { useParams } from 'next/navigation';
-import { PriceChart } from '@/components/PriceChart';
-import ErrorState from '@/components/ErrorState';
-import DetailSkeleton from '@/components/DetailSkeleton';
-import MoneyAmount from '@/components/MoneyAmount';
-import { formatXlmNumber } from '@/lib/formatMoney';
+"use client";
+import { useEffect, useState } from "react";
+import Link from "next/link";
+import Image from "next/image";
+import { useParams } from "next/navigation";
+import { PriceChart } from "@/components/PriceChart";
+import Sparkline from "@/components/Sparkline";
+import ErrorState from "@/components/ErrorState";
+import DetailSkeleton from "@/components/DetailSkeleton";
 
 interface AppraisalEntry {
   date: string;
@@ -37,6 +36,7 @@ export default function CollateralDetailPage() {
   const [record, setRecord] = useState<CollateralRecord | null>(null);
   const [error, setError] = useState<ErrorType>(null);
   const [loading, setLoading] = useState(true);
+  const [copied, setCopied] = useState(false);
 
   const fetchCollateral = async () => {
     try {
@@ -61,6 +61,17 @@ export default function CollateralDetailPage() {
       setLoading(false);
     }
   };
+
+  async function copyId() {
+    if (!id) return;
+    try {
+      await navigator.clipboard.writeText(id);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      // clipboard unavailable
+    }
+  }
 
   useEffect(() => {
     fetchCollateral();
@@ -121,13 +132,20 @@ export default function CollateralDetailPage() {
   const latestValue = record.appraised_value;
 
   return (
-    <main className="max-w-2xl mx-auto px-4 py-10">
-      <Link href="/dashboard" className="text-brown/60 hover:text-brown text-sm mb-6 inline-block">
+    <main className="max-w-2xl mx-auto px-4 py-10" data-print="content">
+      <Link
+        href="/dashboard"
+        className="text-brown/60 hover:text-brown text-sm mb-6 inline-block no-print"
+        data-print="hide"
+      >
         ← Back to Dashboard
       </Link>
 
       {/* Animal profile */}
-      <div className="bg-white rounded-2xl p-6 shadow mb-6 flex gap-6 items-start">
+      <div
+        className="bg-white rounded-2xl p-6 shadow mb-6 flex gap-6 items-start collateral-detail-card"
+        data-print="show"
+      >
         {record.photo_url ? (
           <div className="relative w-24 h-24 rounded-xl overflow-hidden flex-shrink-0">
             <Image
@@ -151,8 +169,26 @@ export default function CollateralDetailPage() {
           </div>
         )}
         <div className="flex-1 min-w-0">
-          <h1 className="text-2xl font-bold text-brown capitalize">{record.animal_type}</h1>
-          <p className="text-brown/50 text-sm mb-3">ID: {record.id}</p>
+            <h1 className="text-2xl font-bold text-brown capitalize">{record.animal_type}</h1>
+            <div className="flex items-center gap-2 mb-3">
+              <p className="text-brown/50 text-sm">ID: {record.id}</p>
+              <button
+                onClick={copyId}
+                aria-label={copied ? "Collateral ID copied" : "Copy collateral ID"}
+                title={copied ? "Copied!" : "Copy ID"}
+                className="shrink-0 text-brown/50 hover:text-brown transition focus:outline-none focus-visible:ring-2 focus-visible:ring-brown rounded"
+              >
+                {copied ? (
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} aria-hidden="true">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                  </svg>
+                ) : (
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} aria-hidden="true">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
+                  </svg>
+                )}
+              </button>
+            </div>
           <dl className="grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
             {record.breed && (
               <>
@@ -183,15 +219,21 @@ export default function CollateralDetailPage() {
       </div>
 
       {/* Current appraised value */}
-      <div className="bg-gold/10 border border-gold/30 rounded-2xl p-6 shadow mb-6 text-center">
+      <div
+        className="bg-gold/10 border border-gold/30 rounded-2xl p-6 shadow mb-6 text-center loan-summary-card"
+        data-print="show"
+      >
         <p className="text-sm text-brown/60 mb-1">Current Appraised Value</p>
-        <p className="text-4xl font-bold text-brown dark:text-cream-50">
-          <MoneyAmount value={latestValue} fromStroops className="text-4xl font-bold" />
-        </p>
+        <p className="text-4xl font-bold text-brown">{(latestValue / 1e7).toFixed(2)} <span className="text-xl font-normal text-brown/60">XLM</span></p>
+        {record.appraisal_history.length >= 2 && (
+          <div className="mt-3 flex justify-center">
+            <Sparkline data={record.appraisal_history.map((entry) => ({ date: entry.date, value: entry.value }))} />
+          </div>
+        )}
       </div>
 
       {/* Appraisal history */}
-      <div className="bg-white rounded-2xl p-6 shadow">
+      <div className="bg-white rounded-2xl p-6 shadow loan-summary-card" data-print="show">
         <h2 className="text-lg font-semibold text-brown mb-4">Appraisal History</h2>
         {record.appraisal_history.length === 0 ? (
           <p className="text-brown/50 text-sm">No appraisal history yet.</p>
@@ -219,9 +261,12 @@ export default function CollateralDetailPage() {
         )}
       </div>
 
-      {/* Price history chart */}
-      <div className="mt-6">
-        <PriceChart url={`${API}/api/v1/collateral/${id}/appraisals`} label="Price History" />
+      {/* Price history chart — hidden when printing (canvas-based) */}
+      <div className="mt-6 no-print" data-print="hide">
+        <PriceChart
+          url={`${API}/api/v1/collateral/${id}/appraisals`}
+          label="Price History"
+        />
       </div>
     </main>
   );
