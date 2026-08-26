@@ -1,11 +1,13 @@
-"use client";
-import { useEffect, useState } from "react";
-import Link from "next/link";
-import Image from "next/image";
-import { useParams } from "next/navigation";
-import { PriceChart } from "@/components/PriceChart";
-import ErrorState from "@/components/ErrorState";
-import DetailSkeleton from "@/components/DetailSkeleton";
+'use client';
+import { useEffect, useState } from 'react';
+import Link from 'next/link';
+import Image from 'next/image';
+import { useParams } from 'next/navigation';
+import { PriceChart } from '@/components/PriceChart';
+import ErrorState from '@/components/ErrorState';
+import DetailSkeleton from '@/components/DetailSkeleton';
+import MoneyAmount from '@/components/MoneyAmount';
+import { formatXlmNumber } from '@/lib/formatMoney';
 
 interface AppraisalEntry {
   date: string;
@@ -26,9 +28,9 @@ interface CollateralRecord {
   createdAt: string;
 }
 
-type ErrorType = "404" | "network" | null;
+type ErrorType = '404' | 'network' | null;
 
-const API = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
+const API = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
 export default function CollateralDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -42,10 +44,10 @@ export default function CollateralDetailPage() {
       setError(null);
       const res = await fetch(`${API}/api/v1/collateral/${id}`);
       if (res.status === 404) {
-        setError("404");
+        setError('404');
         setRecord(null);
       } else if (!res.ok) {
-        setError("network");
+        setError('network');
         setRecord(null);
       } else {
         const data = await res.json();
@@ -53,7 +55,7 @@ export default function CollateralDetailPage() {
         setError(null);
       }
     } catch {
-      setError("network");
+      setError('network');
       setRecord(null);
     } finally {
       setLoading(false);
@@ -68,17 +70,28 @@ export default function CollateralDetailPage() {
     return <DetailSkeleton />;
   }
 
-  if (error === "404") {
+  if (error === '404') {
     return (
       <main className="max-w-2xl mx-auto px-4 py-10">
-        <Link href="/collateral" className="text-brown/60 hover:text-brown text-sm mb-6 inline-block">
+        <Link
+          href="/collateral"
+          className="text-brown/60 hover:text-brown text-sm mb-6 inline-block"
+        >
           ← Back to Collateral List
         </Link>
         <div className="rounded-2xl border border-amber-200 bg-amber-50 dark:border-amber-800 dark:bg-amber-950/20 p-6 text-center">
-          <p className="text-5xl mb-4" aria-hidden="true">🐄</p>
+          <p className="text-5xl mb-4" aria-hidden="true">
+            🐄
+          </p>
           <h1 className="text-2xl font-bold text-brown mb-2">Collateral Not Found</h1>
-          <p className="text-brown/60 mb-6">No collateral record exists for ID <code className="bg-brown/10 px-1 rounded">{id}</code>.</p>
-          <Link href="/collateral" className="inline-block bg-brown text-cream px-5 py-2 rounded-xl font-semibold hover:bg-brown/80 transition focus:outline-none focus:ring-2 focus:ring-brown focus:ring-offset-2">
+          <p className="text-brown/60 mb-6">
+            No collateral record exists for ID{' '}
+            <code className="bg-brown/10 px-1 rounded">{id}</code>.
+          </p>
+          <Link
+            href="/collateral"
+            className="inline-block bg-brown text-cream px-5 py-2 rounded-xl font-semibold hover:bg-brown/80 transition focus:outline-none focus:ring-2 focus:ring-brown focus:ring-offset-2"
+          >
             ← Back to Collateral List
           </Link>
         </div>
@@ -86,7 +99,7 @@ export default function CollateralDetailPage() {
     );
   }
 
-  if (error === "network") {
+  if (error === 'network') {
     return (
       <main className="max-w-2xl mx-auto px-4 py-10">
         <ErrorState
@@ -130,19 +143,41 @@ export default function CollateralDetailPage() {
           </div>
         ) : (
           <div className="w-24 h-24 rounded-xl bg-cream flex items-center justify-center text-4xl flex-shrink-0">
-            {record.animal_type.toLowerCase().includes("goat") ? "🐐" : record.animal_type.toLowerCase().includes("sheep") ? "🐑" : "🐄"}
+            {record.animal_type.toLowerCase().includes('goat')
+              ? '🐐'
+              : record.animal_type.toLowerCase().includes('sheep')
+                ? '🐑'
+                : '🐄'}
           </div>
         )}
         <div className="flex-1 min-w-0">
           <h1 className="text-2xl font-bold text-brown capitalize">{record.animal_type}</h1>
           <p className="text-brown/50 text-sm mb-3">ID: {record.id}</p>
           <dl className="grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
-            {record.breed && <><dt className="text-brown/50">Breed</dt><dd className="font-medium text-brown">{record.breed}</dd></>}
-            {record.age_years != null && <><dt className="text-brown/50">Age</dt><dd className="font-medium text-brown">{record.age_years} yr</dd></>}
-            {record.weight_kg != null && <><dt className="text-brown/50">Weight</dt><dd className="font-medium text-brown">{record.weight_kg} kg</dd></>}
-            <dt className="text-brown/50">Count</dt><dd className="font-medium text-brown">{record.count}</dd>
+            {record.breed && (
+              <>
+                <dt className="text-brown/50">Breed</dt>
+                <dd className="font-medium text-brown">{record.breed}</dd>
+              </>
+            )}
+            {record.age_years != null && (
+              <>
+                <dt className="text-brown/50">Age</dt>
+                <dd className="font-medium text-brown">{record.age_years} yr</dd>
+              </>
+            )}
+            {record.weight_kg != null && (
+              <>
+                <dt className="text-brown/50">Weight</dt>
+                <dd className="font-medium text-brown">{record.weight_kg} kg</dd>
+              </>
+            )}
+            <dt className="text-brown/50">Count</dt>
+            <dd className="font-medium text-brown">{record.count}</dd>
             <dt className="text-brown/50">Owner</dt>
-            <dd className="font-medium text-brown truncate" title={record.owner}>{record.owner.slice(0, 8)}…{record.owner.slice(-4)}</dd>
+            <dd className="font-medium text-brown truncate" title={record.owner}>
+              {record.owner.slice(0, 8)}…{record.owner.slice(-4)}
+            </dd>
           </dl>
         </div>
       </div>
@@ -150,7 +185,9 @@ export default function CollateralDetailPage() {
       {/* Current appraised value */}
       <div className="bg-gold/10 border border-gold/30 rounded-2xl p-6 shadow mb-6 text-center">
         <p className="text-sm text-brown/60 mb-1">Current Appraised Value</p>
-        <p className="text-4xl font-bold text-brown">{(latestValue / 1e7).toFixed(2)} <span className="text-xl font-normal text-brown/60">XLM</span></p>
+        <p className="text-4xl font-bold text-brown dark:text-cream-50">
+          <MoneyAmount value={latestValue} fromStroops className="text-4xl font-bold" />
+        </p>
       </div>
 
       {/* Appraisal history */}
@@ -169,8 +206,12 @@ export default function CollateralDetailPage() {
             <tbody>
               {[...record.appraisal_history].reverse().map((entry, i) => (
                 <tr key={i} className="border-b border-brown/5 last:border-0">
-                  <td className="py-2 text-brown/70">{new Date(entry.date).toLocaleDateString()}</td>
-                  <td className="py-2 text-right font-medium text-brown">{(entry.value / 1e7).toFixed(2)}</td>
+                  <td className="py-2 text-brown/70">
+                    {new Date(entry.date).toLocaleDateString()}
+                  </td>
+                  <td className="py-2 text-right font-medium text-brown dark:text-cream-50">
+                    {formatXlmNumber(entry.value / 1e7)}
+                  </td>
                 </tr>
               ))}
             </tbody>
@@ -180,10 +221,7 @@ export default function CollateralDetailPage() {
 
       {/* Price history chart */}
       <div className="mt-6">
-        <PriceChart
-          url={`${API}/api/v1/collateral/${id}/appraisals`}
-          label="Price History"
-        />
+        <PriceChart url={`${API}/api/v1/collateral/${id}/appraisals`} label="Price History" />
       </div>
     </main>
   );

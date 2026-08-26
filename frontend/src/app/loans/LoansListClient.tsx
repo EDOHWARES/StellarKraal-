@@ -1,11 +1,12 @@
-"use client";
-import { Suspense, useEffect, useState } from "react";
-import { useSearchParams } from "next/navigation";
-import { motion, useReducedMotion } from "framer-motion";
-import SearchFilterBar from "@/components/SearchFilterBar";
-import PageTransition from "@/components/PageTransition";
-import { badgeVariants } from "@/lib/animations";
-import { useScrollPosition } from "@/hooks/useScrollPosition";
+'use client';
+import { Suspense, useEffect, useState } from 'react';
+import { useSearchParams } from 'next/navigation';
+import { motion, useReducedMotion } from 'framer-motion';
+import SearchFilterBar from '@/components/SearchFilterBar';
+import PageTransition from '@/components/PageTransition';
+import { badgeVariants } from '@/lib/animations';
+import { useScrollPosition } from '@/hooks/useScrollPosition';
+import MoneyAmount from '@/components/MoneyAmount';
 
 interface Loan {
   id: string;
@@ -15,9 +16,9 @@ interface Loan {
   createdAt: string;
 }
 
-const STATUS_OPTIONS = ["active", "repaid", "liquidated", "pending"];
+const STATUS_OPTIONS = ['active', 'repaid', 'liquidated', 'pending'];
 const TYPE_OPTIONS: string[] = [];
-const API = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
+const API = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
 function LoanListContent() {
   const searchParams = useSearchParams();
@@ -34,8 +35,8 @@ function LoanListContent() {
       .finally(() => setLoading(false));
   }, []);
 
-  const q = (searchParams.get("q") ?? "").toLowerCase();
-  const statuses = searchParams.getAll("status");
+  const q = (searchParams.get('q') ?? '').toLowerCase();
+  const statuses = searchParams.getAll('status');
 
   const filtered = loans.filter((loan) => {
     const matchesQuery =
@@ -70,20 +71,22 @@ function LoanListContent() {
                 <p className="text-xs text-brown/60 truncate max-w-xs">{loan.borrower}</p>
               </div>
               <div className="text-right">
-                <p className="text-sm font-medium text-brown">{loan.amount.toLocaleString()}</p>
+                <p className="text-sm font-medium text-brown dark:text-cream-50">
+                  <MoneyAmount value={loan.amount} fromStroops interactive={false} />
+                </p>
                 <motion.span
                   key={loan.status}
                   variants={reduced ? undefined : badgeVariants}
                   initial="initial"
                   animate="animate"
                   className={`text-xs px-2 py-0.5 rounded-full font-medium ${
-                    loan.status === "active"
-                      ? "bg-green-100 text-green-800"
-                      : loan.status === "repaid"
-                      ? "bg-blue-100 text-blue-800"
-                      : loan.status === "liquidated"
-                      ? "bg-red-100 text-red-800"
-                      : "bg-gray-100 text-gray-700"
+                    loan.status === 'active'
+                      ? 'bg-green-100 text-green-800'
+                      : loan.status === 'repaid'
+                        ? 'bg-blue-100 text-blue-800'
+                        : loan.status === 'liquidated'
+                          ? 'bg-red-100 text-red-800'
+                          : 'bg-gray-100 text-gray-700'
                   }`}
                 >
                   {loan.status}
